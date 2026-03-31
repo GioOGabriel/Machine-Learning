@@ -1,0 +1,29 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+env/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# Temp files
+tempCodeRunnerFile.py
+*.tmp
+*.temp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Large model files (opcional - descomente se nao quiser versionar)
+# models/*.pkl
