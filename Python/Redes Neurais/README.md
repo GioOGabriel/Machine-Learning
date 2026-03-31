@@ -80,7 +80,7 @@ Machine-Learning/
 
 1. **Clone o repositorio**
 ```bash
-git clone https://github.com/GioOVander/Machine-Learning.git
+git clone https://github.com/GioOGabriel/Machine-Learning.git
 cd Machine-Learning
 ```
 
@@ -162,6 +162,6 @@ Comparacao lado a lado de todos os algoritmos implementados.
 
 ## Autor
 
-**GioOVander**
+**GioOGabriel**
 
-- GitHub: [@GioOVander](https://github.com/GioOVander)
+- GitHub: [@GioOGabriel](https://github.com/GioOGabriel)
