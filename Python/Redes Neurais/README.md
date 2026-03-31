@@ -1,53 +1,52 @@
-# Alzheimer Detection with Machine Learning
+# Deteccao de Alzheimer com Machine Learning
 
 [![Python](https://img.shields.io/badge/Python-3.x-blue.svg)](https://www.python.org/)
 [![Scikit-learn](https://img.shields.io/badge/Scikit--learn-ML-orange.svg)](https://scikit-learn.org/)
 [![Jupyter](https://img.shields.io/badge/Jupyter-Notebook-F37626.svg)](https://jupyter.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-A comprehensive Machine Learning project for predicting Alzheimer's disease using clinical and demographic data. This project implements and compares 5 different classification algorithms with detailed analysis and visualizations.
+Projeto de Machine Learning para prever a probabilidade de Alzheimer com base em dados clinicos e demograficos. Implementa e compara 5 algoritmos de classificacao diferentes com analises detalhadas e visualizacoes.
 
-## Table of Contents
+## Indice
 
-- [Overview](#overview)
-- [Algorithms Implemented](#algorithms-implemented)
-- [Project Structure](#project-structure)
-- [Installation](#installation)
-- [Usage](#usage)
+- [Visao Geral](#visao-geral)
+- [Algoritmos Implementados](#algoritmos-implementados)
+- [Estrutura do Projeto](#estrutura-do-projeto)
+- [Instalacao](#instalacao)
+- [Como Usar](#como-usar)
 - [Dataset](#dataset)
-- [Results & Visualizations](#results--visualizations)
-- [Technologies](#technologies)
-- [Author](#author)
+- [Resultados e Visualizacoes](#resultados-e-visualizacoes)
+- [Tecnologias Utilizadas](#tecnologias-utilizadas)
+- [Autor](#autor)
 
-## Overview
+## Visao Geral
 
-This project aims to predict Alzheimer's disease probability using various Machine Learning techniques. Each algorithm is thoroughly analyzed in dedicated Jupyter notebooks with:
+Este projeto tem como objetivo prever a probabilidade de Alzheimer utilizando diversas tecnicas de Machine Learning. Cada algoritmo e analisado em detalhes em Jupyter Notebooks dedicados com:
 
-- Data preprocessing and exploratory analysis
-- Hyperparameter tuning with GridSearchCV
-- Cross-validation and performance metrics
-- Visualizations (confusion matrices, ROC curves, feature importance)
-- Model comparison and optimization
+- Pre-processamento e analise exploratoria de dados
+- Ajuste de hiperparametros com GridSearchCV
+- Validacao cruzada e metricas de desempenho
+- Visualizacoes (matrizes de confusao, curvas ROC, importancia de features)
+- Comparacao e otimizacao de modelos
 
-## Algorithms Implemented
+## Algoritmos Implementados
 
-| Algorithm | Description | Notebook |
-|-----------|-------------|----------|
-| **Decision Tree** | Rule-based classification model | `Alzheimer_DecisionTree.ipynb` |
-| **K-Nearest Neighbors (KNN)** | Instance-based learning classifier | `Alzheimer_KNN.ipynb` |
-| **Logistic Regression** | Linear model for binary classification | `Alzheimer_LogisticRegression.ipynb` |
-| **Random Forest** | Ensemble of decision trees | `Alzheimer_RandomForest.ipynb` |
-| **Support Vector Machine (SVM)** | Hyperplane-based classification | `Alzheimer_SVM.ipynb` |
+| Algoritmo | Descricao | Notebook |
+|-----------|-----------|----------|
+| **Decision Tree** | Modelo de classificacao baseado em regras | `Alzheimer_DecisionTree.ipynb` |
+| **KNN (K-Nearest Neighbors)** | Classificacao baseada em vizinhos proximos | `Alzheimer_KNN.ipynb` |
+| **Logistic Regression** | Modelo linear para classificacao binaria | `Alzheimer_LogisticRegression.ipynb` |
+| **Random Forest** | Ensemble de arvores de decisao | `Alzheimer_RandomForest.ipynb` |
+| **SVM (Support Vector Machine)** | Classificacao com hiperplanos | `Alzheimer_SVM.ipynb` |
 
-Additional notebooks:
-- `Alzheimer_Otimizado.ipynb` - Optimized model with best parameters
-- `Comparacao_Algoritmos.ipynb` - Comparative analysis of all algorithms
+Notebooks adicionais:
+- `Alzheimer_Otimizado.ipynb` - Modelo otimizado com melhores parametros
+- `Comparacao_Algoritmos.ipynb` - Analise comparativa de todos os algoritmos
 
-## Project Structure
+## Estrutura do Projeto
 
 ```
 Machine-Learning/
-├── notebooks/                    # Jupyter Notebooks with detailed analysis
+├── notebooks/                    # Jupyter Notebooks com analises
 │   ├── Alzheimer_DecisionTree.ipynb
 │   ├── Alzheimer_KNN.ipynb
 │   ├── Alzheimer_LogisticRegression.ipynb
@@ -57,116 +56,112 @@ Machine-Learning/
 │   ├── Alzheimerquedeucerto.ipynb
 │   └── Comparacao_Algoritmos.ipynb
 │
-├── models/                       # Trained models
-│   ├── alzheimer_model.pkl       # Best trained model
-│   └── alzheimer_scaler.pkl      # Feature scaler
+├── models/                       # Modelos treinados
+│   ├── alzheimer_model.pkl       # Melhor modelo treinado
+│   └── alzheimer_scaler.pkl      # Scaler das features
 │
 ├── data/                         # Dataset
 │   └── alzheimers_disease_data.csv
 │
-├── visualizations/               # Generated plots and charts
-│   ├── *_matriz_confusao.png     # Confusion matrices
-│   ├── *_curvas_roc_pr.png       # ROC and PR curves
-│   ├── *_importancia_features.png # Feature importance
-│   └── comparacao_*.png          # Algorithm comparisons
+├── visualizations/               # Graficos gerados
+│   ├── *_matriz_confusao.png     # Matrizes de confusao
+│   ├── *_curvas_roc_pr.png       # Curvas ROC e PR
+│   ├── *_importancia_features.png # Importancia das features
+│   └── comparacao_*.png          # Comparacoes entre algoritmos
 │
-├── alzheimer_predictor.py        # Prediction script
-├── alzheimer_interface_terminal.py # Terminal interface
-├── comparacao_algoritmos.py      # Algorithm comparison script
-├── requirements.txt              # Project dependencies
+├── alzheimer_predictor.py        # Script de predicao
+├── alzheimer_interface_terminal.py # Interface de terminal
+├── comparacao_algoritmos.py      # Script de comparacao
+├── requirements.txt              # Dependencias do projeto
 └── README.md
 ```
 
-## Installation
+## Instalacao
 
-1. **Clone the repository**
+1. **Clone o repositorio**
 ```bash
 git clone https://github.com/GioOVander/Machine-Learning.git
 cd Machine-Learning
 ```
 
-2. **Create a virtual environment (recommended)**
+2. **Crie um ambiente virtual (recomendado)**
 ```bash
 python -m venv .venv
 source .venv/bin/activate  # Linux/Mac
 .venv\Scripts\activate     # Windows
 ```
 
-3. **Install dependencies**
+3. **Instale as dependencias**
 ```bash
 pip install -r requirements.txt
 ```
 
-## Usage
+## Como Usar
 
-### Terminal Interface
-Run the interactive terminal interface for predictions:
+### Interface de Terminal
+Execute a interface interativa para predicoes:
 ```bash
 python alzheimer_interface_terminal.py
 ```
 
-### Algorithm Comparison
-Compare all implemented algorithms:
+### Comparacao de Algoritmos
+Compare todos os algoritmos implementados:
 ```bash
 python comparacao_algoritmos.py
 ```
 
 ### Jupyter Notebooks
-Explore detailed analysis in the notebooks:
+Explore as analises detalhadas nos notebooks:
 ```bash
 jupyter notebook notebooks/
 ```
 
 ## Dataset
 
-The dataset contains clinical and demographic data for Alzheimer's disease prediction, including:
+O dataset contem dados clinicos e demograficos para predicao de Alzheimer, incluindo:
 
-- Patient demographics (age, gender, education)
-- Clinical measurements
-- Cognitive assessments
-- Lifestyle factors
+- Dados demograficos dos pacientes (idade, genero, educacao)
+- Medicoes clinicas
+- Avaliacoes cognitivas
+- Fatores de estilo de vida
 
-## Results & Visualizations
+## Resultados e Visualizacoes
 
-The project generates comprehensive visualizations stored in the `visualizations/` folder:
+O projeto gera visualizacoes completas armazenadas na pasta `visualizations/`:
 
-### Confusion Matrices
-Shows model prediction accuracy for each class.
+### Matrizes de Confusao
+Mostra a precisao das predicoes do modelo para cada classe.
 
-### ROC and PR Curves
-Evaluates model performance across different thresholds.
+### Curvas ROC e PR
+Avalia o desempenho do modelo em diferentes limiares.
 
-### Feature Importance
-Identifies the most relevant features for prediction.
+### Importancia de Features
+Identifica as features mais relevantes para a predicao.
 
-### Algorithm Comparison
-Side-by-side comparison of all implemented algorithms.
+### Comparacao de Algoritmos
+Comparacao lado a lado de todos os algoritmos implementados.
 
-| Visualization Type | Files |
-|-------------------|-------|
-| Confusion Matrices | `*_matriz_confusao.png` |
-| ROC/PR Curves | `*_curvas_roc_pr.png` |
-| Feature Importance | `*_importancia_features.png` |
-| Class Distribution | `*_distribuicao_classes.png` |
-| GridSearch Results | `*_comparacao_gridsearch.png` |
+| Tipo de Visualizacao | Arquivos |
+|---------------------|----------|
+| Matrizes de Confusao | `*_matriz_confusao.png` |
+| Curvas ROC/PR | `*_curvas_roc_pr.png` |
+| Importancia de Features | `*_importancia_features.png` |
+| Distribuicao de Classes | `*_distribuicao_classes.png` |
+| Resultados GridSearch | `*_comparacao_gridsearch.png` |
 
-## Technologies
+## Tecnologias Utilizadas
 
-- **Python 3.x** - Programming language
-- **Scikit-learn** - Machine Learning library
-- **Pandas** - Data manipulation
-- **NumPy** - Numerical computing
-- **Matplotlib** - Data visualization
-- **Seaborn** - Statistical visualization
-- **Jupyter Notebook** - Interactive development
-- **Imbalanced-learn** - Handling imbalanced datasets (SMOTE, NearMiss)
+- **Python 3.x** - Linguagem de programacao
+- **Scikit-learn** - Biblioteca de Machine Learning
+- **Pandas** - Manipulacao de dados
+- **NumPy** - Computacao numerica
+- **Matplotlib** - Visualizacao de dados
+- **Seaborn** - Visualizacao estatistica
+- **Jupyter Notebook** - Desenvolvimento interativo
+- **Imbalanced-learn** - Tratamento de datasets desbalanceados (SMOTE, NearMiss)
 
-## Author
+## Autor
 
 **GioOVander**
 
 - GitHub: [@GioOVander](https://github.com/GioOVander)
-
----
-
-If you find this project useful, please consider giving it a star!
