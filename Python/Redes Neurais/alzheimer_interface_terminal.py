@@ -18,6 +18,10 @@ import sys
 from colorama import init, Fore, Back, Style
 import tkinter as tk
 from tkinter import filedialog
+from pathlib import Path
+
+# Importar utils KaggleHub
+from core.utils_kagglehub import carregar_dataset_kaggle
 
 # Inicializar colorama para cores no terminal Windows
 init()
@@ -71,47 +75,57 @@ class AlzheimerPredictor:
         
         return False
     
-    def train_model(self, csv_path):
-        """Treina o modelo com o dataset fornecido."""
-        print(f"\n{Fore.CYAN}Treinando modelo... Por favor, aguarde.{Style.RESET_ALL}")
-        
-        try:
-            df = pd.read_csv(csv_path)
-            
-            columns_to_remove = ['PatientID', 'DoctorInCharge']
-            df = df.drop(columns=[c for c in columns_to_remove if c in df.columns])
-            
-            X = df.drop(columns=['Diagnosis'])
-            y = df['Diagnosis']
-            
-            smote = SMOTE(random_state=RANDOM_STATE, k_neighbors=5)
-            X_balanced, y_balanced = smote.fit_resample(X, y)
-            
-            X_train, X_test, y_train, y_test = train_test_split(
-                X_balanced, y_balanced,
-                test_size=0.25,
-                random_state=RANDOM_STATE,
-                stratify=y_balanced
-            )
-            
-            self.scaler = StandardScaler()
-            X_train_scaled = self.scaler.fit_transform(X_train)
-            
-            self.model = MLPClassifier(
-                hidden_layer_sizes=(128, 64, 32),
-                activation='relu',
-                solver='adam',
-                alpha=0.0001,
-                learning_rate_init=0.001,
-                max_iter=500,
-                random_state=RANDOM_STATE,
-                early_stopping=True,
-                validation_fraction=0.15
-            )
-            self.model.fit(X_train_scaled, y_train)
-            
-            with open(MODEL_PATH, 'wb') as f:
-                pickle.dump(self.model, f)
+     def train_model(self, csv_path=None):
+          """Treina o modelo com o dataset fornecido ou do Kaggle."""
+          print(f"\n{Fore.CYAN}Carregando dataset...{Style.RESET_ALL}")
+          
+          try:
+              # Tentar carregar do caminho fornecido ou do Kaggle
+              if csv_path and os.path.exists(csv_path):
+                  print(f"{Fore.CYAN}Carregando de: {csv_path}{Style.RESET_ALL}")
+                  df = pd.read_csv(csv_path)
+              else:
+                  print(f"{Fore.CYAN}Baixando do Kaggle...{Style.RESET_ALL}")
+                  _, df = carregar_dataset_kaggle("rabieelkharoua/alzheimers-disease-dataset")
+              
+              print(f"\n{Fore.CYAN}Treinando modelo... Por favor, aguarde.{Style.RESET_ALL}")
+             
+             columns_to_remove = ['PatientID', 'DoctorInCharge']
+             df = df.drop(columns=[c for c in columns_to_remove if c in df.columns])
+             
+             X = df.drop(columns=['Diagnosis'])
+             y = df['Diagnosis']
+             
+             # Dividir treino/teste ANTES do balanceamento
+             X_train, X_test, y_train, y_test = train_test_split(
+                 X, y,
+                 test_size=0.25,
+                 random_state=RANDOM_STATE,
+                 stratify=y
+             )
+             
+             # Balancear com SMOTE APENAS no conjunto de treino
+             smote = SMOTE(random_state=RANDOM_STATE, k_neighbors=5)
+             X_train_balanced, y_train_balanced = smote.fit_resample(X_train, y_train)
+             
+             self.scaler = StandardScaler()
+             X_train_scaled = self.scaler.fit_transform(X_train_balanced)
+             
+             self.model = MLPClassifier(
+                 hidden_layer_sizes=(128, 64, 32),
+                 activation='relu',
+                 solver='adam',
+                 alpha=0.0001,
+                 learning_rate_init=0.001,
+                 max_iter=500,
+                 random_state=RANDOM_STATE,
+                 early_stopping=True,
+                 validation_fraction=0.15
+             )
+             self.model.fit(X_train_scaled, y_train_balanced)
+             
+             with open(MODEL_PATH, 'wb') as f:
+                 pickle.dump(self.model, f)
             with open(SCALER_PATH, 'wb') as f:
                 pickle.dump(self.scaler, f)
             

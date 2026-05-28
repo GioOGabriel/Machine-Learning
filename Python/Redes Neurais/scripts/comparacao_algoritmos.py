@@ -50,6 +50,12 @@ from sklearn.metrics import (
 # Balanceamento
 from imblearn.over_sampling import SMOTE
 
+# Utils KaggleHub
+from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from core.utils_kagglehub import carregar_dataset_kaggle
+
 # Configuração de estilo
 plt.style.use('seaborn-v0_8-whitegrid')
 plt.rcParams['figure.figsize'] = (14, 8)
@@ -87,32 +93,17 @@ def carregar_dados():
     for caminho in caminhos_possiveis:
         try:
             df = pd.read_csv(caminho)
-            print(f"Dataset carregado: {caminho}")
+            print(f"Dataset carregado localmente: {caminho}")
             break
         except FileNotFoundError:
             continue
     
     if df is None:
-        # Se não encontrar, usar tkinter para selecionar
+        # Se não encontrar localmente, baixar do Kaggle
         try:
-            import tkinter as tk
-            from tkinter import filedialog
-            
-            root = tk.Tk()
-            root.withdraw()
-            root.attributes('-topmost', True)
-            
-            csv_path = filedialog.askopenfilename(
-                title='Selecione o arquivo alzheimers_disease_data.csv',
-                filetypes=[('CSV files', '*.csv'), ('All files', '*.*')]
-            )
-            root.destroy()
-            
-            if csv_path:
-                df = pd.read_csv(csv_path)
-                print(f"Dataset carregado: {csv_path}")
-            else:
-                raise FileNotFoundError("Nenhum arquivo selecionado!")
+            print("Arquivo local não encontrado. Baixando do Kaggle...")
+            _, df = carregar_dataset_kaggle("rabieelkharoua/alzheimers-disease-dataset")
+            print("Dataset carregado do Kaggle com sucesso!")
         except Exception as e:
             raise FileNotFoundError(f"Não foi possível carregar o dataset: {e}")
     
@@ -136,32 +127,33 @@ def carregar_dados():
 
 
 def preparar_dados(X, y):
-    """Aplica SMOTE, divide em treino/teste e normaliza."""
-    
-    print("\n[2] PREPARAÇÃO DOS DADOS")
-    print("-" * 40)
-    
-    # Balanceamento com SMOTE
-    smote = SMOTE(random_state=RANDOM_STATE, k_neighbors=5)
-    X_balanced, y_balanced = smote.fit_resample(X, y)
-    print(f"Após SMOTE: {len(y_balanced)} amostras (balanceado)")
-    
-    # Divisão treino/teste
-    X_train, X_test, y_train, y_test = train_test_split(
-        X_balanced, y_balanced,
-        test_size=0.25,
-        random_state=RANDOM_STATE,
-        stratify=y_balanced
-    )
-    print(f"Treino: {len(X_train)} | Teste: {len(X_test)}")
-    
-    # Normalização
-    scaler = StandardScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
-    print("Normalização aplicada (StandardScaler)")
-    
-    return X_train_scaled, X_test_scaled, y_train, y_test, scaler
+     """Divide em treino/teste, aplica SMOTE apenas no treino e normaliza."""
+     
+     print("\n[2] PREPARAÇÃO DOS DADOS")
+     print("-" * 40)
+     
+     # Divisão treino/teste ANTES do balanceamento
+     X_train, X_test, y_train, y_test = train_test_split(
+         X, y,
+         test_size=0.25,
+         random_state=RANDOM_STATE,
+         stratify=y
+     )
+     print(f"Treino: {len(X_train)} | Teste: {len(X_test)}")
+     
+     # Balanceamento com SMOTE APENAS no conjunto de treino
+     smote = SMOTE(random_state=RANDOM_STATE, k_neighbors=5)
+     X_train_balanced, y_train_balanced = smote.fit_resample(X_train, y_train)
+     print(f"Após SMOTE (treino): {len(y_train_balanced)} amostras (balanceado)")
+     print(f"Teste mantido intacto: {len(X_test)} amostras (não poluído)")
+     
+     # Normalização
+     scaler = StandardScaler()
+     X_train_scaled = scaler.fit_transform(X_train_balanced)
+     X_test_scaled = scaler.transform(X_test)
+     print("Normalização aplicada (StandardScaler)")
+     
+     return X_train_scaled, X_test_scaled, y_train_balanced, y_test, scaler
 
 
 # ==============================================================================
@@ -544,6 +536,259 @@ def plotar_matrizes_confusao(resultados, y_test, titulo_grupo):
     plt.show()
 
 
+def plotar_tempo_treinamento(df_base, df_otimizado):
+    """Plota comparação de tempo de treinamento."""
+    
+    fig, ax = plt.subplots(figsize=(12, 6))
+    
+    x = np.arange(len(df_base))
+    width = 0.35
+    
+    bars1 = ax.bar(x - width/2, df_base['Tempo (s)'], width,
+                   label='Base', color='#3498db', edgecolor='black')
+    bars2 = ax.bar(x + width/2, df_otimizado['Tempo (s)'], width,
+                   label='Otimizado', color='#e74c3c', edgecolor='black')
+    
+    ax.set_xlabel('Algoritmo', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Tempo de Treinamento (segundos)', fontsize=12, fontweight='bold')
+    ax.set_title('Comparação de Tempo de Treinamento', fontsize=14, fontweight='bold')
+    ax.set_xticks(x)
+    ax.set_xticklabels(df_base['Algoritmo'], rotation=45, ha='right')
+    ax.legend(fontsize=11)
+    ax.grid(axis='y', alpha=0.3)
+    
+    # Adicionar valores nas barras
+    for bar in bars1:
+        height = bar.get_height()
+        ax.annotate(f'{height:.2f}s',
+                   xy=(bar.get_x() + bar.get_width()/2, height),
+                   xytext=(0, 3), textcoords="offset points",
+                   ha='center', va='bottom', fontsize=9)
+    
+    for bar in bars2:
+        height = bar.get_height()
+        ax.annotate(f'{height:.2f}s',
+                   xy=(bar.get_x() + bar.get_width()/2, height),
+                   xytext=(0, 3), textcoords="offset points",
+                   ha='center', va='bottom', fontsize=9)
+    
+    plt.tight_layout()
+    plt.savefig('tempo_treinamento.png', dpi=150, bbox_inches='tight')
+    plt.show()
+
+
+def plotar_radar_desempenho(df_base, df_otimizado):
+    """Plota gráfico radar comparando desempenho dos algoritmos."""
+    
+    from math import pi
+    
+    fig, axes = plt.subplots(1, 2, figsize=(16, 8), subplot_kw=dict(projection='polar'))
+    
+    categorias = ['Acurácia', 'Precisão', 'Recall', 'F1-Score', 'AUC-ROC']
+    
+    # Função para plotar radar
+    def plotar_radar_algoritmo(ax, df, titulo):
+        N = len(categorias)
+        angles = [n / float(N) * 2 * pi for n in range(N)]
+        angles += angles[:1]
+        
+        ax.set_xticks(angles[:-1])
+        ax.set_xticklabels(categorias, fontsize=10)
+        ax.set_ylim(0, 1)
+        ax.set_yticks([0.2, 0.4, 0.6, 0.8, 1.0])
+        ax.grid(True)
+        
+        cores = plt.cm.Set2(np.linspace(0, 1, len(df)))
+        
+        for idx, (_, row) in enumerate(df.iterrows()):
+            valores = [row['Acurácia'], row['Precisão'], row['Recall'], row['F1-Score'], row['AUC-ROC']]
+            valores += valores[:1]
+            ax.plot(angles, valores, 'o-', linewidth=2, label=row['Algoritmo'], color=cores[idx])
+            ax.fill(angles, valores, alpha=0.15, color=cores[idx])
+        
+        ax.set_title(titulo, fontsize=12, fontweight='bold', pad=20)
+        ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1), fontsize=9)
+    
+    plotar_radar_algoritmo(axes[0], df_base, 'Desempenho dos Modelos BASE')
+    plotar_radar_algoritmo(axes[1], df_otimizado, 'Desempenho dos Modelos OTIMIZADOS')
+    
+    plt.tight_layout()
+    plt.savefig('radar_desempenho.png', dpi=150, bbox_inches='tight')
+    plt.show()
+
+
+def plotar_comparacao_scatter(df_base, df_otimizado):
+    """Plota scatter plot F1-Score vs Acurácia."""
+    
+    fig, ax = plt.subplots(figsize=(12, 8))
+    
+    # Plotar modelos base
+    scatter1 = ax.scatter(df_base['Acurácia'], df_base['F1-Score'],
+                         s=200, alpha=0.6, color='#3498db', edgecolor='black',
+                         label='Base', linewidth=2)
+    
+    # Plotar modelos otimizados
+    scatter2 = ax.scatter(df_otimizado['Acurácia'], df_otimizado['F1-Score'],
+                         s=200, alpha=0.6, color='#e74c3c', edgecolor='black',
+                         label='Otimizado', linewidth=2, marker='s')
+    
+    # Adicionar nomes dos algoritmos
+    for idx, row in df_base.iterrows():
+        ax.annotate(f"{row['Algoritmo']}\n(B)", 
+                   xy=(row['Acurácia'], row['F1-Score']),
+                   xytext=(5, 5), textcoords='offset points',
+                   fontsize=9, fontweight='bold')
+    
+    for idx, row in df_otimizado.iterrows():
+        ax.annotate(f"{row['Algoritmo']}\n(O)", 
+                   xy=(row['Acurácia'], row['F1-Score']),
+                   xytext=(5, -15), textcoords='offset points',
+                   fontsize=9, fontweight='bold')
+    
+    ax.set_xlabel('Acurácia', fontsize=12, fontweight='bold')
+    ax.set_ylabel('F1-Score', fontsize=12, fontweight='bold')
+    ax.set_title('Relação Acurácia vs F1-Score', fontsize=14, fontweight='bold')
+    ax.legend(fontsize=11, loc='lower right')
+    ax.grid(True, alpha=0.3)
+    ax.set_xlim(0.5, 1.05)
+    ax.set_ylim(0.5, 1.05)
+    
+    plt.tight_layout()
+    plt.savefig('scatter_acuracia_f1.png', dpi=150, bbox_inches='tight')
+    plt.show()
+
+
+def plotar_box_plot_metricas(df_base, df_otimizado):
+    """Plota box plots para distribuição de métricas."""
+    
+    metricas = ['Acurácia', 'Precisão', 'Recall', 'F1-Score', 'AUC-ROC']
+    
+    fig, axes = plt.subplots(1, 5, figsize=(18, 5))
+    
+    for idx, metrica in enumerate(metricas):
+        ax = axes[idx]
+        
+        dados = [df_base[metrica].values, df_otimizado[metrica].values]
+        bp = ax.boxplot(dados, labels=['Base', 'Otimizado'], patch_artist=True)
+        
+        for patch, cor in zip(bp['boxes'], ['#3498db', '#e74c3c']):
+            patch.set_facecolor(cor)
+            patch.set_alpha(0.7)
+        
+        ax.set_ylabel(metrica, fontweight='bold')
+        ax.set_title(f'Distribuição - {metrica}', fontweight='bold')
+        ax.grid(axis='y', alpha=0.3)
+        ax.set_ylim(0.4, 1.05)
+    
+    plt.suptitle('Box Plot de Métricas: Base vs Otimizado', fontsize=14, fontweight='bold')
+    plt.tight_layout()
+    plt.savefig('boxplot_metricas.png', dpi=150, bbox_inches='tight')
+    plt.show()
+
+
+def plotar_summary_performance(df_base, df_otimizado):
+    """Plota um sumário visual de desempenho."""
+    
+    fig = plt.figure(figsize=(16, 10))
+    gs = fig.add_gridspec(3, 3, hspace=0.3, wspace=0.3)
+    
+    # 1. Melhor F1-Score
+    ax1 = fig.add_subplot(gs[0, 0])
+    melhor_base = df_base.loc[df_base['F1-Score'].idxmax()]
+    melhor_otim = df_otimizado.loc[df_otimizado['F1-Score'].idxmax()]
+    
+    nomes = [melhor_base['Algoritmo'], melhor_otim['Algoritmo']]
+    scores = [melhor_base['F1-Score'], melhor_otim['F1-Score']]
+    cores = ['#3498db', '#e74c3c']
+    
+    bars = ax1.bar(nomes, scores, color=cores, edgecolor='black', linewidth=2)
+    ax1.set_ylabel('F1-Score', fontweight='bold')
+    ax1.set_title('Melhor F1-Score', fontweight='bold')
+    ax1.set_ylim(0, 1)
+    
+    for bar, score in zip(bars, scores):
+        ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.02,
+                f'{score:.3f}', ha='center', va='bottom', fontweight='bold')
+    
+    # 2. Melhor Acurácia
+    ax2 = fig.add_subplot(gs[0, 1])
+    melhor_base_acc = df_base.loc[df_base['Acurácia'].idxmax()]
+    melhor_otim_acc = df_otimizado.loc[df_otimizado['Acurácia'].idxmax()]
+    
+    nomes = [melhor_base_acc['Algoritmo'], melhor_otim_acc['Algoritmo']]
+    scores = [melhor_base_acc['Acurácia'], melhor_otim_acc['Acurácia']]
+    
+    bars = ax2.bar(nomes, scores, color=cores, edgecolor='black', linewidth=2)
+    ax2.set_ylabel('Acurácia', fontweight='bold')
+    ax2.set_title('Melhor Acurácia', fontweight='bold')
+    ax2.set_ylim(0, 1)
+    
+    for bar, score in zip(bars, scores):
+        ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.02,
+                f'{score:.3f}', ha='center', va='bottom', fontweight='bold')
+    
+    # 3. Tempo Médio
+    ax3 = fig.add_subplot(gs[0, 2])
+    tempo_base = df_base['Tempo (s)'].mean()
+    tempo_otim = df_otimizado['Tempo (s)'].mean()
+    
+    bars = ax3.bar(['Base', 'Otimizado'], [tempo_base, tempo_otim],
+                   color=cores, edgecolor='black', linewidth=2)
+    ax3.set_ylabel('Tempo (s)', fontweight='bold')
+    ax3.set_title('Tempo Médio de Treino', fontweight='bold')
+    
+    for bar, tempo in zip(bars, [tempo_base, tempo_otim]):
+        ax3.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
+                f'{tempo:.2f}s', ha='center', va='bottom', fontweight='bold')
+    
+    # 4-8. Comparação por métrica
+    metricas = ['Acurácia', 'Precisão', 'Recall', 'F1-Score', 'AUC-ROC']
+    positions = [(1, 0), (1, 1), (1, 2), (2, 0), (2, 1)]
+    
+    for idx, (metrica, pos) in enumerate(zip(metricas, positions)):
+        ax = fig.add_subplot(gs[pos[0], pos[1]])
+        
+        media_base = df_base[metrica].mean()
+        media_otim = df_otimizado[metrica].mean()
+        std_base = df_base[metrica].std()
+        std_otim = df_otimizado[metrica].std()
+        
+        x_pos = np.arange(2)
+        ax.bar(x_pos, [media_base, media_otim], 
+               yerr=[std_base, std_otim],
+               color=cores, edgecolor='black', linewidth=2, capsize=5)
+        ax.set_xticks(x_pos)
+        ax.set_xticklabels(['Base', 'Otimizado'])
+        ax.set_ylabel(metrica, fontweight='bold')
+        ax.set_ylim(0, 1.1)
+        ax.grid(axis='y', alpha=0.3)
+        ax.set_title(f'{metrica} (média ± std)', fontweight='bold', fontsize=10)
+    
+    # Último gráfico: Ganho médio
+    ax8 = fig.add_subplot(gs[2, 2])
+    
+    ganho = []
+    for metrica in metricas:
+        media_base = df_base[metrica].mean()
+        media_otim = df_otimizado[metrica].mean()
+        ganho_pct = ((media_otim - media_base) / media_base * 100) if media_base > 0 else 0
+        ganho.append(ganho_pct)
+    
+    cores_ganho = ['green' if g >= 0 else 'red' for g in ganho]
+    bars = ax8.barh(metricas, ganho, color=cores_ganho, edgecolor='black', linewidth=2)
+    ax8.axvline(x=0, color='black', linestyle='-', linewidth=1)
+    ax8.set_xlabel('Ganho (%)', fontweight='bold')
+    ax8.set_title('Ganho Percentual (Otimizado - Base)', fontweight='bold')
+    
+    for i, (bar, g) in enumerate(zip(bars, ganho)):
+        ax8.text(g + (1 if g > 0 else -1), i, f'{g:+.1f}%', 
+                va='center', ha='left' if g > 0 else 'right', fontweight='bold')
+    
+    plt.suptitle('Resumo de Desempenho: Base vs Otimizado', fontsize=16, fontweight='bold')
+    plt.savefig('summary_performance.png', dpi=150, bbox_inches='tight')
+    plt.show()
+
+
 # ==============================================================================
 # EXECUÇÃO PRINCIPAL
 # ==============================================================================
@@ -667,6 +912,26 @@ def main():
     plotar_matrizes_confusao(resultados_base, y_test, "Modelos Base")
     plotar_matrizes_confusao(resultados_otim, y_test, "Modelos Otimizados")
     
+    # 6. Tempo de treinamento
+    print("  Gerando gráfico de tempo de treinamento...")
+    plotar_tempo_treinamento(df_base, df_otimizado)
+    
+    # 7. Gráfico Radar
+    print("  Gerando gráfico radar...")
+    plotar_radar_desempenho(df_base, df_otimizado)
+    
+    # 8. Scatter plot
+    print("  Gerando scatter plot...")
+    plotar_comparacao_scatter(df_base, df_otimizado)
+    
+    # 9. Box plots
+    print("  Gerando box plots...")
+    plotar_box_plot_metricas(df_base, df_otimizado)
+    
+    # 10. Summary performance
+    print("  Gerando sumário de desempenho...")
+    plotar_summary_performance(df_base, df_otimizado)
+    
     # =========================================================================
     # SALVAR RESULTADOS
     # =========================================================================
@@ -696,6 +961,11 @@ def main():
     print("    - ranking_f1score.png")
     print("    - matrizes_confusao_modelos_base.png")
     print("    - matrizes_confusao_modelos_otimizados.png")
+    print("    - tempo_treinamento.png")
+    print("    - radar_desempenho.png")
+    print("    - scatter_acuracia_f1.png")
+    print("    - boxplot_metricas.png")
+    print("    - summary_performance.png")
     
     # =========================================================================
     # RESUMO FINAL

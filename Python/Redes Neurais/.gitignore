@@ -25,5 +25,21 @@ tempCodeRunnerFile.py
 .DS_Store
 Thumbs.db
 
-# Large model files (opcional - descomente se nao quiser versionar)
-# models/*.pkl
+# Kaggle credentials (IMPORTANTE!)
+.kaggle/
+~/.kaggle/
+
+# Dataset files (grande demais)
+data/*.csv
+data/*.zip
+
+# Model files (grandes)
+models/*.pkl
+
+# Streamlit cache
+.streamlit/
+
+# Relatórios e gráficos temporários
+relatorios/*.csv
+relatorios/*.png
+visualizations/*.png
