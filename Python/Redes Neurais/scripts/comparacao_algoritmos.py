@@ -857,10 +857,46 @@ def main():
     df_otimizado = pd.DataFrame(metricas_otim)
     
     # =========================================================================
+    # TREINAMENTO - MODELOS COM GRIDSEARCH
+    # =========================================================================
+    print("\n" + "=" * 80)
+    print("[5] TREINAMENTO DOS MODELOS COM GRIDSEARCH (OTIMIZAÇÃO DE HIPERPARÂMETROS)")
+    print("=" * 80)
+    
+    param_grids = get_param_grids()
+    resultados_grid = {}
+    metricas_grid = []
+    
+    for nome, modelo in algoritmos_otimizados.items():
+        if nome in param_grids:
+            print(f"\n  GridSearch {nome}...", end=" ", flush=True)
+            
+            # Executar GridSearch
+            melhor_modelo = otimizar_com_gridsearch(
+                modelo, param_grids[nome], X_train, y_train, nome
+            )
+            
+            # Avaliar modelo otimizado com GridSearch
+            metricas, y_pred, y_proba = treinar_e_avaliar(
+                melhor_modelo, X_train, X_test, y_train, y_test, f"{nome} (GridSearch)"
+            )
+            print(f"OK (Acc: {metricas['Acurácia']:.2%}, F1: {metricas['F1-Score']:.2%})")
+            
+            metricas_grid.append(metricas)
+            resultados_grid[nome] = {
+                'modelo': melhor_modelo,
+                'y_pred': y_pred,
+                'y_proba': y_proba,
+                'metricas': metricas
+            }
+    
+    df_gridsearch = pd.DataFrame(metricas_grid)
+    
+    # =========================================================================
     # RESULTADOS CONSOLIDADOS
     # =========================================================================
     print("\n" + "=" * 80)
-    print("[5] RESULTADOS CONSOLIDADOS")
+    print("[6] RESULTADOS CONSOLIDADOS")
     print("=" * 80)
     
     print("\n--- MODELOS BASE ---")
@@ -868,6 +904,12 @@ def main():
     
     print("\n--- MODELOS OTIMIZADOS ---")
     print(df_otimizado.to_string(index=False, float_format=lambda x: f'{x:.4f}' if isinstance(x, float) else x))
+    
+    print("\n--- MODELOS COM GRIDSEARCH ---")
+    if not df_gridsearch.empty:
+        print(df_gridsearch.to_string(index=False, float_format=lambda x: f'{x:.4f}' if isinstance(x, float) else x))
+    else:
+        print("  Nenhum modelo otimizado com GridSearch")
     
     # Melhor modelo
     print("\n" + "-" * 40)
@@ -884,11 +926,18 @@ def main():
     print(f"  Acurácia: {melhor_otim['Acurácia']:.4f}")
     print(f"  Recall: {melhor_otim['Recall']:.4f}")
     
+    if not df_gridsearch.empty:
+        melhor_grid = df_gridsearch.loc[df_gridsearch['F1-Score'].idxmax()]
+        print(f"\nMelhor modelo GRIDSEARCH: {melhor_grid['Algoritmo']}")
+        print(f"  F1-Score: {melhor_grid['F1-Score']:.4f}")
+        print(f"  Acurácia: {melhor_grid['Acurácia']:.4f}")
+        print(f"  Recall: {melhor_grid['Recall']:.4f}")
+    
     # =========================================================================
     # VISUALIZAÇÕES
     # =========================================================================
     print("\n" + "=" * 80)
-    print("[6] GERANDO VISUALIZAÇÕES")
+    print("[7] GERANDO VISUALIZAÇÕES")
     print("=" * 80)
     
     # 1. Comparação de métricas
